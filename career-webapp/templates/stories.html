@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}War Stories — Career Notebook{% endblock %}
+
+{% block content %}
+
+<div class="phase-header">
+  <span class="phase-tag" style="background:#D85A3022;color:#D85A30">BEHAVIORAL</span>
+  <h2>War Stories — Real Problems I Solved</h2>
+  <div class="phase-tagline">Each story answers a different behavioral interview question — 30-45 seconds each</div>
+</div>
+
+<div class="diagram-hero">
+  {{ stories_diagram }}
+</div>
+
+{% for story in stories %}
+<div class="section-block">
+  <div class="toggle-header">
+    <span class="toggle-icon">▾</span>
+    <span class="section-label" style="color:{{ story['color'] }}">{{ story["title"] }}</span>
+  </div>
+  <div class="toggle-body">
+    <div style="margin-bottom:8px">
+      <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)">Skill demonstrated:</span>
+      <span style="font-size:13px;color:var(--text-dim)">{{ story["skill"] }}</span>
+    </div>
+    <div style="margin-bottom:12px">
+      <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)">Use when asked:</span>
+      <span style="font-size:13px;color:{{ story['color'] }};font-style:italic">"{{ story['use_when'] }}"</span>
+    </div>
+    <div class="script-box">
+      <span class="script-label">Ready script</span>
+      "{{ story['script'] }}"
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

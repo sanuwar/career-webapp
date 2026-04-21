@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Priority Gaps — Career Notebook{% endblock %}
+
+{% block content %}
+
+<div class="phase-header">
+  <span class="phase-tag" style="background: #ff475722; color: #ff4757">PRIORITY SUMMARY</span>
+  <h2>Gaps to Close Before the Interview</h2>
+  <div class="phase-tagline">Work through these top-to-bottom — high priority first</div>
+</div>
+
+{# ---- High Priority ---- #}
+<div class="section-block priority-section">
+  <div class="section-label">
+    <span class="priority-badge" style="background: #ff475722; color: #ff4757">HIGH PRIORITY</span>
+    — Fix these first
+  </div>
+  <table class="priority-table">
+    <thead>
+      <tr>
+        <th>Gap</th>
+        <th>Project</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in gaps.high %}
+      <tr>
+        <td>{{ g.gap }}</td>
+        <td>{{ g.project }}</td>
+        <td>{{ g.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ---- Medium Priority ---- #}
+<div class="section-block priority-section">
+  <div class="section-label">
+    <span class="priority-badge" style="background: #BA751722; color: #BA7517">MEDIUM PRIORITY</span>
+    — Strengthen these
+  </div>
+  <table class="priority-table">
+    <thead>
+      <tr>
+        <th>Gap</th>
+        <th>Project</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in gaps.medium %}
+      <tr>
+        <td>{{ g.gap }}</td>
+        <td>{{ g.project }}</td>
+        <td>{{ g.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ---- Low Priority ---- #}
+<div class="section-block priority-section">
+  <div class="section-label">
+    <span class="priority-badge" style="background: #4ecdc422; color: #4ecdc4">LOW PRIORITY</span>
+    — Nice to have
+  </div>
+  <table class="priority-table">
+    <thead>
+      <tr>
+        <th>Gap</th>
+        <th>Project</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in gaps.low %}
+      <tr>
+        <td>{{ g.gap }}</td>
+        <td>{{ g.project }}</td>
+        <td>{{ g.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

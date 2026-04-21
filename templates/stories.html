@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}War Stories - Career Notebook{% endblock %}
+
+{% block content %}
+
+<div class="phase-header stories-header">
+  <span class="phase-tag" style="background:#D85A3022;color:#D85A30">Behavioral</span>
+  <h2>War Stories</h2>
+  <div class="phase-tagline">STAR format, short answer version, and follow-up probes with ready answers.</div>
+</div>
+
+<div class="diagram-hero">
+  {{ stories_diagram }}
+</div>
+
+{% for story in stories %}
+<div class="section-block story-block">
+  <div class="toggle-header story-toggle">
+    <span class="toggle-icon">+</span>
+    <div class="story-toggle-main">
+      <span class="section-label" style="color:{{ story['color'] }}">{{ story["title"] }}</span>
+      <span class="story-skill-pill">{{ story["skill"] }}</span>
+    </div>
+  </div>
+  <div class="toggle-body collapsed">
+    <div class="story-meta-row">
+      <div class="story-meta-card">
+        <span class="story-meta-label">Use when asked</span>
+        <div class="story-meta-value">"{{ story['use_when'] }}"</div>
+      </div>
+      <div class="story-meta-card">
+        <span class="story-meta-label">Answer length</span>
+        <div class="story-meta-value">30 to 45 seconds, then expand with the probes below.</div>
+      </div>
+    </div>
+
+    <div class="section-label">STAR Breakdown</div>
+    <div class="star-grid">
+      <div class="star-card">
+        <div class="star-label">Situation</div>
+        <div class="star-text">{{ story["situation"] }}</div>
+      </div>
+      <div class="star-card">
+        <div class="star-label">Task</div>
+        <div class="star-text">{{ story["task"] }}</div>
+      </div>
+      <div class="star-card star-card-wide">
+        <div class="star-label">Action</div>
+        <div class="star-text">{{ story["action"] }}</div>
+      </div>
+      <div class="star-card">
+        <div class="star-label">Result</div>
+        <div class="star-text">{{ story["result"] }}</div>
+      </div>
+    </div>
+
+    <div class="script-box">
+      <span class="script-label">Short answer</span>
+      "{{ story['script'] }}"
+    </div>
+
+    {% if story.get('follow_ups') %}
+    <div class="section-label" style="margin-top:18px">Follow-up Questions</div>
+    {% for item in story["follow_ups"] %}
+    <div class="follow-up-card">
+      <div class="probe-q">Q: {{ item["q"] }}</div>
+      <div class="follow-up-answer">
+        <span class="follow-up-label">Strong answer</span>
+        {{ item["a"] }}
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if story.get('mind_map') %}
+    <div class="mind-map-shell">
+      <div class="toggle-header mind-map-toggle">
+        <span class="toggle-icon">+</span>
+        <div class="mind-map-heading">
+          <span class="section-label">Mind Map</span>
+          <span class="mind-map-subtitle">Above and beyond the main answer</span>
+        </div>
+      </div>
+      <div class="toggle-body collapsed">
+        {% if story.get('mind_map_svg') %}
+        <div class="mind-map-visual">
+          {{ story["mind_map_svg"] }}
+        </div>
+        {% endif %}
+        <div class="mind-map-grid">
+          {% for branch in story["mind_map"] %}
+          <div class="mind-map-card">
+            <div class="mind-map-label">{{ branch["label"] }}</div>
+            <div class="mind-map-text">{{ branch["text"] }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

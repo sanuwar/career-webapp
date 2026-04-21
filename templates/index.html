@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}{{ current_phase.title }} — Career Notebook{% endblock %}
+
+{% block content %}
+
+<div class="phase-header">
+  <span class="phase-tag" style="background:{{ current_phase.color }}22;color:{{ current_phase.color }}">
+    {{ current_phase.tag }}
+  </span>
+  <h2>{{ current_phase.title }}</h2>
+  <div class="period">{{ current_phase.period }}</div>
+  {% if current_phase.tagline %}
+    <div class="phase-tagline">{{ current_phase.tagline }}</div>
+  {% endif %}
+</div>
+
+{% if current_phase.get('placeholder') %}
+  <div class="placeholder-msg">
+    This section has not been captured yet.<br>
+    Add your project details in <code>data/career_data.py</code>
+  </div>
+{% else %}
+
+  {# ======== DIAGRAM — Hero visual ======== #}
+  {% if diagram %}
+  <div class="diagram-hero">
+    {{ diagram }}
+  </div>
+  {% endif %}
+
+  {# ======== SCRIPT — Always visible ======== #}
+  {% if current_phase.script %}
+  <div class="section-block">
+    <div class="script-box">
+      <span class="script-label">Interview script — memorize this</span>
+      "{{ current_phase.script }}"
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== CONNECTOR — Always visible ======== #}
+  {% if current_phase.get('connector') %}
+  <div class="section-block">
+    <div class="connector-box">
+      <span class="conn-label">Connector line — ties to next project</span>
+      "{{ current_phase.connector }}"
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== CORRECTIONS — Collapsible ======== #}
+  {% if current_phase.corrections %}
+  <div class="section-block">
+    <div class="toggle-header">
+      <span class="toggle-icon">▾</span>
+      <span class="section-label">Terminology corrections ({{ current_phase.corrections|length }})</span>
+    </div>
+    <div class="toggle-body">
+      {% for c in current_phase.corrections %}
+      <div class="correction">
+        <div class="correction-wrong">
+          <span class="correction-label">✗ Don't say</span>
+          {{ c.wrong }}
+        </div>
+        <div class="correction-right">
+          <span class="correction-label">✓ Say this</span>
+          {{ c.right }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== RAW QUOTE — Collapsible ======== #}
+  {% if current_phase.raw %}
+  <div class="section-block">
+    <div class="toggle-header">
+      <span class="toggle-icon">▸</span>
+      <span class="section-label">What I originally said</span>
+    </div>
+    <div class="toggle-body collapsed">
+      <div class="raw-quote">"{{ current_phase.raw }}"</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== DETAILS — Collapsible ======== #}
+  {% if current_phase.details %}
+  <div class="section-block">
+    <div class="toggle-header">
+      <span class="toggle-icon">▾</span>
+      <span class="section-label">Key details ({{ current_phase.details|length }})</span>
+    </div>
+    <div class="toggle-body">
+      {% for d in current_phase.details %}
+      <div class="detail-item">
+        <div class="detail-label">{{ d.label }}</div>
+        <div class="detail-text">{{ d.text }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== GAPS — Always visible (important) ======== #}
+  {% if current_phase.gaps %}
+  <div class="section-block">
+    <div class="section-label" style="margin-bottom:10px">Gaps to fill ({{ current_phase.gaps|length }})</div>
+    {% for g in current_phase.gaps %}
+    <div class="gap-box">
+      <span class="gap-icon">⚠ Gap</span>
+      {{ g }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ======== PROBES — Collapsible ======== #}
+  {% if current_phase.probes %}
+  <div class="section-block">
+    <div class="toggle-header">
+      <span class="toggle-icon">▾</span>
+      <span class="section-label">Probe questions ({{ current_phase.probes|length }})</span>
+    </div>
+    <div class="toggle-body">
+      {% for p in current_phase.probes %}
+      <div class="probe">
+        <div class="probe-q">Q: {{ p.q }}</div>
+        <div class="probe-why">Why: {{ p.why }}</div>
+        {% if p.get('has_script') and p.get('probe_script') %}
+        <div class="script-box" style="margin-top:8px">
+          <span class="script-label">Ready answer</span>
+          "{{ p.probe_script }}"
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======== KNOWLEDGE — Collapsible ======== #}
+  {% if current_phase.get('knowledge') %}
+  <div class="section-block">
+    <div class="toggle-header">
+      <span class="toggle-icon">▸</span>
+      <span class="section-label">{{ current_phase.knowledge["title"] }}</span>
+    </div>
+    <div class="toggle-body collapsed">
+      <div class="knowledge-box">
+        {% for item in current_phase.knowledge["items"] %}
+        <div class="kb-item">• {{ item }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+{% endif %}
+
+{# ======== NAVIGATION ======== #}
+<div class="phase-nav">
+  {% if current_index > 0 %}
+    <a href="/phase/{{ phases[current_index - 1].id }}" class="phase-nav-btn prev">
+      ← {{ phases[current_index - 1].title.split('—')[0] | trim }}
+    </a>
+  {% else %}<span></span>{% endif %}
+  {% if current_index < phases|length - 1 %}
+    <a href="/phase/{{ phases[current_index + 1].id }}" class="phase-nav-btn next">
+      {{ phases[current_index + 1].title.split('—')[0] | trim }} →
+    </a>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('keydown', e => {
+    {% if current_index > 0 %}
+    if (e.key==='ArrowLeft') window.location.href='/phase/{{ phases[current_index-1].id }}';
+    {% endif %}
+    {% if current_index < phases|length - 1 %}
+    if (e.key==='ArrowRight') window.location.href='/phase/{{ phases[current_index+1].id }}';
+    {% endif %}
+  });
+</script>
+{% endblock %}

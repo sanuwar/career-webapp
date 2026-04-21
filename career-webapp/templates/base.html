@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Career Notebook{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="badge">{{ meta.target }} — Onsite Interview</div>
+    <h1>Career Notebook</h1>
+    <div class="subtitle">
+      <span>{{ meta.name }}</span> &nbsp;·&nbsp;
+      <a href="/timeline" style="color:var(--text-dim);text-decoration:none;border-bottom:1px dotted var(--text-muted)">View full timeline</a>
+    </div>
+  </header>
+
+  <nav class="timeline-nav">
+    {% for phase in phases %}
+      {% if not loop.first %}
+        <span class="timeline-arrow">→</span>
+      {% endif %}
+      <a href="/phase/{{ phase.id }}"
+         class="timeline-node {% if current_phase_id == phase.id %}active{% endif %}"
+         style="text-decoration:none">
+        <div class="timeline-dot" style="background:{{ phase.color }}"></div>
+        <div class="timeline-label">{{ phase.title.split('—')[0] | trim }}</div>
+      </a>
+    {% endfor %}
+    <span class="timeline-arrow">·</span>
+    <a href="/stories" class="timeline-node {% if current_phase_id == '__stories__' %}active{% endif %}" style="text-decoration:none">
+      <div class="timeline-dot" style="background:#D85A30"></div>
+      <div class="timeline-label">Stories</div>
+    </a>
+    <a href="/gaps" class="timeline-node {% if current_phase_id == '__gaps__' %}active{% endif %}" style="text-decoration:none">
+      <div class="timeline-dot" style="background:#ff4757"></div>
+      <div class="timeline-label">Gaps</div>
+    </a>
+  </nav>
+
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+  document.querySelectorAll('.toggle-header').forEach(h => {
+    h.addEventListener('click', () => {
+      const body = h.nextElementSibling;
+      const icon = h.querySelector('.toggle-icon');
+      body.classList.toggle('collapsed');
+      icon.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+    });
+  });
+  </script>
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Career Timeline — Career Notebook{% endblock %}
+
+{% block content %}
+<div class="phase-header">
+  <span class="phase-tag" style="background:#7F77DD22;color:#7F77DD">OVERVIEW</span>
+  <h2>Full Career Timeline</h2>
+  <div class="phase-tagline">Click any phase in the nav above to dive into details</div>
+</div>
+
+<div class="diagram-hero">
+  {{ timeline_svg }}
+</div>
+{% endblock %}
