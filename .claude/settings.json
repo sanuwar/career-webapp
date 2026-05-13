@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/Scripts/python.exe -c \"from data.vocab_data import VOCAB_CATEGORIES, VOCAB_TERMS; print\\(len\\(VOCAB_TERMS\\), 'terms,', len\\(VOCAB_CATEGORIES\\), 'categories'\\)\")",
+      "Bash(venv/Scripts/python.exe -c \"import app; print\\('app loaded OK'\\)\")",
+      "Bash(venv/Scripts/python.exe -c \"import app; print\\('OK'\\)\")"
+    ]
+  }
+}

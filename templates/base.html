@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Career Notebook{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=3">
 </head>
 <body>
 
@@ -36,6 +36,10 @@
     <a href="/gaps" class="timeline-node {% if current_phase_id == '__gaps__' %}active{% endif %}">
       <div class="timeline-dot" style="background:#ff4757"></div>
       <div class="timeline-label">Gaps</div>
+    </a>
+    <a href="/vocab" class="timeline-node {% if current_phase_id == '__vocab__' %}active{% endif %}">
+      <div class="timeline-dot" style="background:#7c5cdb"></div>
+      <div class="timeline-label">Vocab</div>
     </a>
   </nav>
 

@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block title %}Vocab Practice - Career Notebook{% endblock %}
+
+{% block content %}
+
+<div class="phase-header stories-header">
+  <span class="phase-tag" style="background:#7c5cdb22;color:#7c5cdb">Interview Vocabulary</span>
+  <h2>Flashcard Practice</h2>
+  <div class="phase-tagline">{{ total }} terms across {{ categories|length }} domains. Flag any card to bring it back for repeat practice.</div>
+</div>
+
+{# ── Toolbar ── #}
+<div class="vocab-toolbar">
+  <div class="vocab-mode-toggle">
+    <button class="vocab-mode-btn active" id="mode-flash">⬜ Flashcards</button>
+    <button class="vocab-mode-btn" id="mode-list">☰ List view</button>
+  </div>
+  <div class="vocab-toolbar-right">
+    <button class="vocab-ctrl-btn" id="btn-shuffle">⇌ Shuffle</button>
+    <button class="vocab-ctrl-btn" id="btn-reset">↺ Reset</button>
+  </div>
+</div>
+
+{# ── Category pills ── #}
+<div class="vocab-filter-row">
+  <button class="vocab-cat-btn active" data-cat="all">All <span class="vocab-cat-count">{{ total }}</span></button>
+  {% for cat in categories %}
+  <button class="vocab-cat-btn" data-cat="{{ cat.id }}" style="--cat-color: {{ cat.color }}">
+    {{ cat.icon }} {{ cat.label }} <span class="vocab-cat-count">{{ cat.count }}</span>
+  </button>
+  {% endfor %}
+</div>
+
+{# ── FLASHCARD MODE ── #}
+<div id="flashcard-mode">
+
+  <div class="vocab-progress-row">
+    <span class="vocab-progress-label" id="progress-text">Group 1 / —</span>
+    <div class="vocab-progress-track">
+      <div class="vocab-progress-fill" id="progress-fill"></div>
+    </div>
+    <span class="vocab-progress-label" id="flagged-label">0 flagged</span>
+  </div>
+
+  {# 4-card grid rendered by JS #}
+  <div id="card-grid" class="card-grid"></div>
+
+  <div class="flashcard-nav">
+    <button class="vocab-ctrl-btn" id="btn-prev">← Prev</button>
+    <button class="review-btn" id="btn-review" style="display:none">
+      ↩ Review flagged &nbsp;<span class="review-count" id="review-count">0</span>
+    </button>
+    <button class="vocab-ctrl-btn" id="btn-next">Next →</button>
+  </div>
+
+</div>
+
+{# ── LIST MODE ── #}
+<div id="list-mode" style="display:none">
+  {% for cat in categories %}
+  <div class="vocab-list-section" data-cat="{{ cat.id }}">
+    <div class="vocab-list-heading" style="--hcolor: {{ cat.color }}">
+      <span class="vocab-list-cat-name">{{ cat.icon }} {{ cat.label }}</span>
+      <span class="vocab-list-cat-desc">{{ cat.description }}</span>
+    </div>
+    <div class="vocab-list-grid">
+      {% for term in terms_by_cat[cat.id] %}
+      <div class="vocab-list-card">
+        <div class="vocab-list-term">{{ term.term }}</div>
+        <div class="vocab-list-def">{{ term.definition }}</div>
+        <div class="vocab-list-ex-label">Example</div>
+        <div class="vocab-list-ex">"{{ term.example }}"</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script id="vocab-data" type="application/json">{{ vocab_json }}</script>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ── Button reset ── */
+.vocab-mode-btn,.vocab-ctrl-btn,.vocab-cat-btn,.fc-flag-btn,.review-btn{
+  -webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;cursor:pointer;line-height:1;
+}
+
+/* ── Toolbar ── */
+.vocab-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.vocab-mode-toggle{display:flex;gap:4px;background:rgba(11,35,65,.07);padding:4px;border-radius:999px;}
+.vocab-mode-btn{padding:8px 20px;border:none;border-radius:999px;background:transparent;color:#425066;font-size:12px;transition:background .2s,color .2s,box-shadow .2s;}
+.vocab-mode-btn.active{background:#fff;color:#0b2341;font-weight:700;box-shadow:0 2px 10px rgba(11,35,65,.13);}
+.vocab-toolbar-right{display:flex;gap:8px;}
+.vocab-ctrl-btn{padding:9px 18px;border:1.5px solid rgba(11,35,65,.15);border-radius:999px;background:#fff;color:#425066;font-size:12px;transition:border-color .18s,color .18s,transform .15s;}
+.vocab-ctrl-btn:hover{border-color:#e86100;color:#e86100;transform:translateY(-1px);}
+
+/* ── Category pills ── */
+.vocab-filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;}
+.vocab-cat-btn{padding:7px 14px;border:1.5px solid rgba(11,35,65,.13);border-radius:999px;background:#fff;color:#425066;font-size:11px;transition:background .18s,border-color .18s,color .18s,transform .15s;}
+.vocab-cat-btn:hover{border-color:var(--cat-color,#e86100);color:var(--cat-color,#e86100);transform:translateY(-1px);}
+.vocab-cat-btn.active{background:var(--cat-color,#0b2341);border-color:var(--cat-color,#0b2341);color:#fff;}
+.vocab-cat-btn[data-cat="all"].active{background:#0b2341;border-color:#0b2341;color:#fff;}
+.vocab-cat-count{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:999px;background:rgba(0,0,0,.13);font-size:10px;}
+
+/* ── Progress bar ── */
+.vocab-progress-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.vocab-progress-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6d7888;white-space:nowrap;min-width:56px;}
+.vocab-progress-track{flex:1;height:5px;background:rgba(11,35,65,.09);border-radius:999px;overflow:hidden;}
+.vocab-progress-fill{height:100%;background:linear-gradient(90deg,#e86100,#f5a623);border-radius:999px;transition:width .4s ease;width:0%;}
+
+/* ── 4-card grid ── */
+.card-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-auto-rows:260px;
+  gap:14px;
+  margin-bottom:20px;
+}
+
+/* Each grid cell is the positioning context */
+.fc-slot{position:relative;cursor:pointer;user-select:none;}
+
+/* The card wrapper — front/back stacked inside */
+.fc-card{position:relative;width:100%;height:100%;}
+
+/* Both faces */
+.fc-front,.fc-back{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:18px 20px 18px 20px;
+  border-radius:20px;
+  transition:opacity .28s ease,transform .28s ease;
+  overflow:hidden;
+}
+
+/* Front face */
+.fc-front{
+  background:linear-gradient(145deg,#fff,#f3f6fb);
+  border:1px solid rgba(11,35,65,.1);
+  box-shadow:0 8px 32px rgba(11,35,65,.07),0 2px 8px rgba(11,35,65,.04);
+  opacity:1;transform:scale(1) translateY(0);pointer-events:auto;z-index:2;
+}
+
+/* Back face */
+.fc-back{
+  background:linear-gradient(145deg,#0b2341,#17385f);
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 8px 32px rgba(11,35,65,.18);
+  color:#fff;
+  opacity:0;transform:scale(.97) translateY(10px);pointer-events:none;z-index:1;
+}
+
+/* Flipped state */
+.fc-card.flipped .fc-front{opacity:0;transform:scale(.97) translateY(-10px);pointer-events:none;}
+.fc-card.flipped .fc-back{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+
+/* Flag button — top-right corner of each face */
+.fc-flag-btn{
+  position:absolute;top:12px;right:12px;
+  padding:4px 10px;
+  border:1.5px solid rgba(11,35,65,.14);
+  border-radius:999px;
+  background:rgba(255,255,255,.9);
+  color:#6d7888;
+  font-size:10px;letter-spacing:.5px;
+  transition:background .18s,border-color .18s,color .18s,transform .15s;
+  z-index:10;
+}
+.fc-flag-btn:hover{border-color:#e86100;color:#e86100;transform:scale(1.05);}
+.fc-flag-btn.flagged{background:#fff3e8;border-color:#e86100;color:#e86100;font-weight:600;}
+
+/* Back face flag button variant */
+.fc-back .fc-flag-btn{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.25);
+  color:rgba(255,255,255,.7);
+}
+.fc-back .fc-flag-btn:hover{background:rgba(255,255,255,.22);color:#fff;}
+.fc-back .fc-flag-btn.flagged{background:rgba(232,97,0,.35);border-color:#e86100;color:#fff;}
+
+/* Category pill */
+.fc-pill{
+  display:inline-block;width:fit-content;
+  padding:3px 10px;border-radius:999px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  margin-top:6px;margin-bottom:12px;
+}
+
+/* Front term */
+.fc-term{
+  font-family:'Fraunces',serif;font-size:21px;line-height:1.2;color:#17202d;
+  flex:1;display:flex;align-items:center;
+}
+
+/* Front hint */
+.fc-hint{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;
+  text-transform:uppercase;color:#6d7888;opacity:.55;margin-top:8px;
+}
+
+/* Back content */
+.fc-back-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.fc-def{font-size:13px;line-height:1.6;color:rgba(255,255,255,.88);}
+.fc-ex-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.38);margin-top:4px;}
+.fc-ex{font-size:12px;line-height:1.65;color:rgba(255,255,255,.6);font-style:italic;}
+
+/* ── Nav row ── */
+.flashcard-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:40px;}
+
+.review-btn{
+  padding:10px 20px;border:2px solid #e86100;border-radius:999px;
+  background:#fff3e8;color:#e86100;font-size:12px;
+  transition:background .18s,transform .15s;
+}
+.review-btn:hover{background:#e86100;color:#fff;transform:translateY(-1px);}
+.review-count{
+  display:inline-block;padding:2px 7px;border-radius:999px;
+  background:#e86100;color:#fff;font-size:10px;margin-left:2px;
+}
+
+/* ── List mode ── */
+.vocab-list-section{margin-bottom:36px;}
+.vocab-list-heading{display:flex;align-items:baseline;gap:16px;padding:14px 20px;margin-bottom:14px;background:#fff;border-left:4px solid var(--hcolor,#e86100);border-radius:0 14px 14px 0;box-shadow:0 2px 12px rgba(11,35,65,.05);}
+.vocab-list-cat-name{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--hcolor,#e86100);white-space:nowrap;}
+.vocab-list-cat-desc{font-size:14px;color:#6d7888;}
+.vocab-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;}
+.vocab-list-card{padding:18px 22px;background:#fff;border:1px solid rgba(11,35,65,.08);border-radius:18px;box-shadow:0 4px 16px rgba(11,35,65,.04);}
+.vocab-list-term{font-family:'Fraunces',serif;font-size:18px;color:#17202d;margin-bottom:8px;}
+.vocab-list-def{font-size:14px;line-height:1.65;color:#425066;margin-bottom:12px;}
+.vocab-list-ex-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:#6d7888;margin-bottom:5px;}
+.vocab-list-ex{font-size:13px;line-height:1.65;color:#6d7888;font-style:italic;padding:10px 14px;background:rgba(11,35,65,.03);border-left:3px solid rgba(11,35,65,.1);border-radius:0 10px 10px 0;}
+
+@media(max-width:800px){
+  .card-grid{grid-template-columns:1fr;grid-auto-rows:220px;}
+  .vocab-list-grid{grid-template-columns:1fr;}
+}
+@media(max-width:700px){
+  .vocab-toolbar{flex-direction:column;align-items:flex-start;}
+  .vocab-list-heading{flex-direction:column;gap:4px;}
+  .flashcard-nav{flex-wrap:wrap;justify-content:center;}
+}
+</style>
+
+<script>
+(function () {
+  const raw = JSON.parse(document.getElementById('vocab-data').textContent);
+  let deck = [...raw];
+  let groupStart = 0;
+  const G = 4; // cards per group
+  let flagged = new Set();
+  let activeCategory = 'all';
+
+  const grid        = document.getElementById('card-grid');
+  const progressTx  = document.getElementById('progress-text');
+  const fillBar     = document.getElementById('progress-fill');
+  const flaggedLbl  = document.getElementById('flagged-label');
+  const reviewBtn   = document.getElementById('btn-review');
+  const reviewCount = document.getElementById('review-count');
+  const flashMode   = document.getElementById('flashcard-mode');
+  const listMode    = document.getElementById('list-mode');
+  const listSects   = document.querySelectorAll('.vocab-list-section');
+
+  // colour map from pill buttons
+  const catColors = {};
+  document.querySelectorAll('.vocab-cat-btn[data-cat]').forEach(btn => {
+    const id = btn.dataset.cat;
+    if (id !== 'all') catColors[id] = btn.style.getPropertyValue('--cat-color').trim();
+  });
+  function getColor(c) { return catColors[c] || '#6d7888'; }
+
+  function updateFlagUI() {
+    const n = flagged.size;
+    flaggedLbl.textContent = n + ' flagged';
+    reviewCount.textContent = n;
+    reviewBtn.style.display = n > 0 ? '' : 'none';
+  }
+
+  function renderGroup() {
+    if (!deck.length) {
+      grid.innerHTML = '<p style="padding:40px;color:#6d7888;text-align:center">No cards in this category.</p>';
+      progressTx.textContent = '0 / 0';
+      fillBar.style.width = '0%';
+      updateFlagUI();
+      return;
+    }
+
+    const group = deck.slice(groupStart, groupStart + G);
+    grid.innerHTML = '';
+
+    group.forEach(term => {
+      const color   = getColor(term.category);
+      const isFl    = flagged.has(term.term);
+      const flagTxt = isFl ? '★ Flagged' : '☆ Repeat';
+      const flagCls = isFl ? 'flagged' : '';
+
+      const slot = document.createElement('div');
+      slot.className = 'fc-slot';
+      slot.innerHTML = `
+        <div class="fc-card">
+          <div class="fc-front">
+            <button class="fc-flag-btn ${flagCls}" data-term="${term.term.replace(/"/g,'&quot;')}">${flagTxt}</button>
+            <div class="fc-pill" style="background:${color}22;color:${color}">${term.category_label}</div>
+            <div class="fc-term">${term.term}</div>
+            <div class="fc-hint">tap to flip</div>
+          </div>
+          <div class="fc-back">
+            <button class="fc-flag-btn ${flagCls}" data-term="${term.term.replace(/"/g,'&quot;')}">${flagTxt}</button>
+            <div class="fc-pill" style="background:rgba(255,255,255,.13);color:rgba(255,255,255,.65)">${term.category_label}</div>
+            <div class="fc-back-body">
+              <div class="fc-def">${term.definition}</div>
+              <div class="fc-ex-label">Example</div>
+              <div class="fc-ex">"${term.example}"</div>
+            </div>
+          </div>
+        </div>`;
+
+      const card = slot.querySelector('.fc-card');
+
+      // flip on card click, skip flag button clicks
+      slot.addEventListener('click', e => {
+        if (e.target.closest('.fc-flag-btn')) return;
+        card.classList.toggle('flipped');
+      });
+
+      // flag toggle — syncs both front and back buttons
+      slot.querySelectorAll('.fc-flag-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const t = btn.dataset.term;
+          if (flagged.has(t)) { flagged.delete(t); } else { flagged.add(t); }
+          const now = flagged.has(t);
+          slot.querySelectorAll('.fc-flag-btn').forEach(b => {
+            b.textContent = now ? '★ Flagged' : '☆ Repeat';
+            b.classList.toggle('flagged', now);
+          });
+          updateFlagUI();
+        });
+      });
+
+      grid.appendChild(slot);
+    });
+
+    // progress
+    const totalGroups = Math.ceil(deck.length / G);
+    const curGroup    = Math.floor(groupStart / G) + 1;
+    progressTx.textContent = 'Group ' + curGroup + ' / ' + totalGroups;
+    fillBar.style.width = Math.round((curGroup / totalGroups) * 100) + '%';
+    updateFlagUI();
+  }
+
+  function goNext() {
+    if (groupStart + G < deck.length) { groupStart += G; renderGroup(); }
+  }
+  function goPrev() {
+    if (groupStart > 0) { groupStart -= G; renderGroup(); }
+  }
+
+  document.getElementById('btn-next').addEventListener('click', goNext);
+  document.getElementById('btn-prev').addEventListener('click', goPrev);
+
+  reviewBtn.addEventListener('click', () => {
+    deck = raw.filter(t => flagged.has(t.term));
+    flagged.clear();
+    groupStart = 0;
+    renderGroup();
+  });
+
+  document.getElementById('btn-shuffle').addEventListener('click', () => {
+    deck = [...deck].sort(() => Math.random() - 0.5);
+    groupStart = 0;
+    renderGroup();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    flagged.clear();
+    groupStart = 0;
+    filterDeck(activeCategory);
+  });
+
+  function filterDeck(catId) {
+    activeCategory = catId;
+    deck = catId === 'all' ? [...raw] : raw.filter(t => t.category === catId);
+    groupStart = 0;
+    flagged.clear();
+    renderGroup();
+    listSects.forEach(s => {
+      s.style.display = (catId === 'all' || s.dataset.cat === catId) ? '' : 'none';
+    });
+  }
+
+  document.querySelectorAll('.vocab-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.vocab-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterDeck(btn.dataset.cat);
+    });
+  });
+
+  document.getElementById('mode-flash').addEventListener('click', () => {
+    flashMode.style.display = '';
+    listMode.style.display  = 'none';
+    document.getElementById('mode-flash').classList.add('active');
+    document.getElementById('mode-list').classList.remove('active');
+  });
+
+  document.getElementById('mode-list').addEventListener('click', () => {
+    flashMode.style.display = 'none';
+    listMode.style.display  = '';
+    document.getElementById('mode-list').classList.add('active');
+    document.getElementById('mode-flash').classList.remove('active');
+  });
+
+  document.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+    if (e.code === 'ArrowRight') goNext();
+    if (e.code === 'ArrowLeft')  goPrev();
+  });
+
+  renderGroup();
+})();
+</script>
+{% endblock %}

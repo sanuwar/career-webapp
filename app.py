@@ -13,6 +13,7 @@ from markupsafe import Markup
 
 from data.career_data import META, PHASES, PRIORITY_GAPS, WAR_STORIES
 from data.diagrams import DIAGRAMS, career_timeline, story_mind_map_diagram, war_stories_diagram
+from data.vocab_data import VOCAB_CATEGORIES, VOCAB_TERMS
 
 app = FastAPI(title="Career Notebook")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -112,6 +113,40 @@ async def stories_view(request: Request):
             "stories": stories,
             "current_phase_id": "__stories__",
             "stories_diagram": Markup(war_stories_diagram()),
+        },
+    )
+
+
+@app.get("/vocab", response_class=HTMLResponse)
+async def vocab_view(request: Request):
+    import json
+    terms_by_cat = {}
+    for cat in VOCAB_CATEGORIES:
+        terms_by_cat[cat["id"]] = [t for t in VOCAB_TERMS if t["category"] == cat["id"]]
+
+    cats_with_count = [
+        {**cat, "count": len(terms_by_cat[cat["id"]])}
+        for cat in VOCAB_CATEGORIES
+    ]
+
+    cat_label_map = {cat["id"]: cat["label"] for cat in VOCAB_CATEGORIES}
+    enriched_terms = [
+        {**t, "category_label": cat_label_map.get(t["category"], t["category"])}
+        for t in VOCAB_TERMS
+    ]
+
+    return templates.TemplateResponse(
+        request=request,
+        name="vocab.html",
+        context={
+            "request": request,
+            "meta": META,
+            "phases": PHASES,
+            "categories": cats_with_count,
+            "terms_by_cat": terms_by_cat,
+            "total": len(VOCAB_TERMS),
+            "vocab_json": Markup(json.dumps(enriched_terms)),
+            "current_phase_id": "__vocab__",
         },
     )
 
